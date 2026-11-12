@@ -10,23 +10,23 @@ day-to-day operations.
 ## 1. Setup
 
 You need a Supabase project. A new free project works, and so does one you
-already use for something else: everything here lives in its own `cookbook`
+already use for something else: everything here lives in its own `plico`
 schema and nothing in `public` or `auth` is created or changed.
 
 1. **Run the migration.** Either:
    - Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`, or
    - open the SQL editor in the dashboard and paste in
-     `supabase/migrations/20261110000000_cookbook_schema.sql`.
+     `supabase/migrations/20261110000000_plico_schema.sql`.
 2. **Optional: load sample data.** Run `supabase/seed.sql` the same way to get
    five sections and two recipes.
 3. **Expose the schema to the API.** In the dashboard's Data API settings, add
-   `cookbook` to *Exposed schemas*. Until you do, every request fails with
+   `plico` to *Exposed schemas*. Until you do, every request fails with
    "The schema must be one of the following: public, ...".
    For local development the same setting is in `supabase/config.toml`:
 
    ```toml
    [api]
-   schemas = ["public", "cookbook"]
+   schemas = ["public", "plico"]
    ```
 4. **Give the app its connection details.** On a deployed site, edit
    `config.json`, which sits next to `index.html`. It is read when the page
@@ -51,7 +51,7 @@ schema and nothing in `public` or `auth` is created or changed.
    editor:
 
    ```sql
-   select cookbook.bootstrap_admin('you@example.com');
+   select plico.bootstrap_admin('you@example.com');
    ```
 
    From then on, roles are managed from the app's admin screen.
@@ -59,7 +59,7 @@ schema and nothing in `public` or `auth` is created or changed.
 The client is created once, in `src/lib/supabase.ts`, and pointed at the schema:
 
 ```ts
-createClient(url, key, { db: { schema: 'cookbook' } })
+createClient(url, key, { db: { schema: 'plico' } })
 ```
 
 ## 2. Keys
@@ -74,7 +74,7 @@ dashboard; removing the commit is not enough.
 
 ## 3. Data model
 
-Four tables, all in the `cookbook` schema.
+Four tables, all in the `plico` schema.
 
 **`settings`**: one row. `site_name`, `tagline`, and `public_read` (true =
 anyone can read recipes; false = signed-in accounts only).
@@ -135,10 +135,10 @@ stored here; they stay in `auth.users`.
 How it is enforced:
 
 - **Row-level security** is on for every table. Each line above is a policy in
-  the migration file, and the policies call `cookbook.is_editor()`,
-  `cookbook.is_admin()` and `cookbook.can_read()`.
+  the migration file, and the policies call `plico.is_editor()`,
+  `plico.is_admin()` and `plico.can_read()`.
 - **Roles cannot be self-assigned.** No client has write access to `profiles`.
-  The only way a role changes is `cookbook.set_role(user, role)`, which checks
+  The only way a role changes is `plico.set_role(user, role)`, which checks
   that the caller is an admin and refuses to remove the last admin.
 - **The creator cannot be faked.** A trigger sets `created_by` to the
   signed-in user on insert and freezes it, and the slug, on update. The
@@ -152,7 +152,7 @@ How it is enforced:
 
 Sign-up, sign-in, password reset and email confirmation are Supabase Auth,
 called from the app with `supabase.auth.signUp`, `signInWithPassword` and so
-on. The cookbook adds only the role on top.
+on. Plico adds only the role on top.
 
 **What happens on sign-in.** The app calls:
 
@@ -175,13 +175,13 @@ it regardless.
 | `set_role(p_user, p_role)` | admin | Makes someone a viewer, editor or admin |
 
 **Choosing who can join.** This is set in the dashboard's Auth settings, not
-in the cookbook:
+in Plico:
 
 - *Open*: leave sign-ups enabled. Anyone can make an account, but they are
   only a viewer until an admin promotes them.
 - *Invite only*: disable new sign-ups and invite people from the dashboard's
   Users page.
-- *Private cookbook*: invite only, plus `public_read = false` so recipes are
+- *Private recipe box*: invite only, plus `public_read = false` so recipes are
   hidden from signed-out visitors.
 
 Also in Auth settings: set the **Site URL** and **Redirect URLs** to wherever
@@ -198,7 +198,7 @@ contributor name they had.
 **Backups.** Free projects have no downloadable backups. Export on a schedule:
 
 ```sh
-supabase db dump --schema cookbook --data-only -f cookbook-backup.sql
+supabase db dump --schema plico --data-only -f plico-backup.sql
 ```
 
 The app's export button (recipes as JSON) is the non-technical equivalent.
@@ -224,5 +224,5 @@ Supabase at all; the header of `access_rules.sql` says how.
 `supabase migration new <name>`, so installs that already ran the old ones can
 upgrade.
 
-**Uninstalling.** `drop schema cookbook cascade;` removes everything this
+**Uninstalling.** `drop schema plico cascade;` removes everything this
 project created. Accounts in `auth.users` are left alone.

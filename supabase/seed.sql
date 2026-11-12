@@ -1,19 +1,19 @@
 -- Sample data so a fresh install is not empty. Safe to edit or skip.
 
-insert into cookbook.sections (name, sort) values
+insert into plico.sections (name, sort) values
   ('Breakfast',     10),
   ('Soups & Stews', 20),
   ('Main Dishes',   30),
   ('Sides',         40),
   ('Desserts',      50);
 
-insert into cookbook.recipes
+insert into plico.recipes
   (id, title, section_id, serves, time, description, ingredients, steps, notes, tags)
 values
 (
   'buttermilk-pancakes',
   'Buttermilk Pancakes',
-  (select id from cookbook.sections where name = 'Breakfast'),
+  (select id from plico.sections where name = 'Breakfast'),
   4,
   'About 25 min',
   'Fluffy griddle pancakes from pantry staples.',
@@ -39,7 +39,7 @@ values
 (
   'weeknight-chili',
   'Weeknight Chili',
-  (select id from cookbook.sections where name = 'Soups & Stews'),
+  (select id from plico.sections where name = 'Soups & Stews'),
   6,
   'About 50 min',
   'A one-pot beef and bean chili that is better the next day.',

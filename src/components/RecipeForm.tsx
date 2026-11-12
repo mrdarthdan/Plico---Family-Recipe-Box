@@ -4,12 +4,12 @@ import { insertRecipe, updateRecipe } from '../lib/api'
 import {
   ingredientsToText, parseIngredients, parseSteps, stepsToText, today, uniqueSlug,
 } from '../lib/parse'
-import type { CookbookData, Recipe, RecipeInput } from '../lib/types'
+import type { RecipeBoxData, Recipe, RecipeInput } from '../lib/types'
 import { go } from '../lib/useHash'
 
 interface Props {
   recipe: Recipe | null
-  data: CookbookData
+  data: RecipeBoxData
   user: User | null
   canEdit: boolean
   onSaved: (id: string) => Promise<void>
@@ -45,7 +45,7 @@ export function RecipeForm({ recipe: r, data, user, canEdit, onSaved }: Props) {
             {user
               ? data.fromCache
                 ? "The recipe database isn't responding, so editing is unavailable right now."
-                : `You're signed in as ${user.email}, but this account can't add or edit recipes yet. Ask the cookbook's admin to make it an editor.`
+                : `You're signed in as ${user.email}, but this account can't add or edit recipes yet. Ask an admin to make it an editor.`
               : 'Only signed-in editors can add or edit recipes.'}
           </p>
           {!user && (

@@ -2,11 +2,11 @@
 // database (see docs/supabase.md); nothing here is a security boundary.
 
 import { supabase } from './supabase'
-import type { CookbookData, Member, Profile, Recipe, RecipeInput, Role, Section, Settings } from './types'
+import type { RecipeBoxData, Member, Profile, Recipe, RecipeInput, Role, Section, Settings } from './types'
 
-const CACHE_KEY = 'cookbook-cache-v1'
+const CACHE_KEY = 'plico-cache-v1'
 
-function readCache(): Omit<CookbookData, 'fromCache'> | null {
+function readCache(): Omit<RecipeBoxData, 'fromCache'> | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
     return raw ? JSON.parse(raw) : null
@@ -14,14 +14,14 @@ function readCache(): Omit<CookbookData, 'fromCache'> | null {
     return null
   }
 }
-function writeCache(data: Omit<CookbookData, 'fromCache'>) {
+function writeCache(data: Omit<RecipeBoxData, 'fromCache'>) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data))
   } catch {
     /* storage full or unavailable: the cache is only a convenience */
   }
 }
-/** The cookbook's name from the last visit, to show while loading. */
+/** The recipe box name from the last visit, to show while loading. */
 export function cachedSiteName(): string | null {
   return readCache()?.settings.site_name ?? null
 }
@@ -37,7 +37,7 @@ export function clearCache() {
  * Loads settings, sections and recipes. If the database does not respond,
  * falls back to the copy saved in this browser by the last successful load.
  */
-export async function loadAll(): Promise<CookbookData> {
+export async function loadAll(): Promise<RecipeBoxData> {
   try {
     const [s, sec, rec] = await Promise.all([
       supabase.from('settings').select('site_name, tagline, public_read').eq('id', 1).maybeSingle(),

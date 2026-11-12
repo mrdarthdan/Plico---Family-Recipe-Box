@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Every table and function this app uses lives in the `cookbook` schema.
+// Every table and function this app uses lives in the `plico` schema.
 function makeClient(url: string, key: string) {
-  return createClient(url, key, { db: { schema: 'cookbook' } })
+  return createClient(url, key, { db: { schema: 'plico' } })
 }
 
 /** Set by initSupabase(), which main.tsx awaits before anything renders. */

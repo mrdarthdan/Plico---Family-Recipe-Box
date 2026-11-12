@@ -56,7 +56,7 @@ export interface Member extends Profile {
   created_at: string
 }
 
-export interface CookbookData {
+export interface RecipeBoxData {
   settings: Settings
   sections: Section[]
   recipes: Recipe[]

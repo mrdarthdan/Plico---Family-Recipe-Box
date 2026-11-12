@@ -2,11 +2,11 @@ import { useEffect, useState, type FormEvent } from 'react'
 import {
   addSection, deleteSection, listMembers, saveSettings, setRole, updateSection,
 } from '../lib/api'
-import type { CookbookData, Member, Role, Section } from '../lib/types'
+import type { RecipeBoxData, Member, Role, Section } from '../lib/types'
 import { go } from '../lib/useHash'
 
 interface Props {
-  data: CookbookData
+  data: RecipeBoxData
   isAdmin: boolean
   myId: string | null
   reload: () => Promise<void>
@@ -23,7 +23,7 @@ export function AdminPage({ data, isAdmin, myId, reload }: Props) {
     return (
       <div className="panel">
         <h1>Admins only</h1>
-        <p className="lede">This page is for the cookbook's admins.</p>
+        <p className="lede">This page is for admins.</p>
         <div className="actions">
           <button className="btn" onClick={() => go('')}>
             Back to recipes
@@ -133,7 +133,7 @@ function Sections({
   sections, recipes, run,
 }: {
   sections: Section[]
-  recipes: CookbookData['recipes']
+  recipes: RecipeBoxData['recipes']
   run: Run
 }) {
   const [name, setName] = useState('')
@@ -214,7 +214,7 @@ function SectionRow({
   )
 }
 
-function SiteSettings({ data, run }: { data: CookbookData; run: Run }) {
+function SiteSettings({ data, run }: { data: RecipeBoxData; run: Run }) {
   const [siteName, setSiteName] = useState(data.settings.site_name)
   const [tagline, setTagline] = useState(data.settings.tagline ?? '')
   const [publicRead, setPublicRead] = useState(data.settings.public_read)
@@ -235,7 +235,7 @@ function SiteSettings({ data, run }: { data: CookbookData; run: Run }) {
         }}
       >
         <div className="field">
-          <label htmlFor="s-name">Cookbook name</label>
+          <label htmlFor="s-name">Recipe box name</label>
           <input id="s-name" maxLength={80} value={siteName} onChange={(e) => setSiteName(e.target.value)} />
         </div>
         <div className="field">
@@ -257,7 +257,7 @@ function SiteSettings({ data, run }: { data: CookbookData; run: Run }) {
   )
 }
 
-function Export({ data }: { data: CookbookData }) {
+function Export({ data }: { data: RecipeBoxData }) {
   const download = () => {
     const payload = {
       exported_at: new Date().toISOString(),
@@ -268,7 +268,7 @@ function Export({ data }: { data: CookbookData }) {
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }))
     const a = document.createElement('a')
     a.href = url
-    a.download = 'cookbook-export-' + payload.exported_at.slice(0, 10) + '.json'
+    a.download = 'plico-export-' + payload.exported_at.slice(0, 10) + '.json'
     a.click()
     URL.revokeObjectURL(url)
   }

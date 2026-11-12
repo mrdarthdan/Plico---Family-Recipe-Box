@@ -1,8 +1,8 @@
-import type { CookbookData, Recipe } from '../lib/types'
+import type { RecipeBoxData, Recipe } from '../lib/types'
 import { go } from '../lib/useHash'
 
 interface Props {
-  data: CookbookData
+  data: RecipeBoxData
   canEdit: boolean
   signedIn: boolean
   flash: string | null
@@ -57,7 +57,7 @@ export function IndexPage(p: Props) {
 
       {locked ? (
         <p className="empty">
-          This cookbook is private.{' '}
+          This recipe box is private.{' '}
           <button className="link" onClick={() => go('account')}>
             Sign in
           </button>{' '}

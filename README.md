@@ -10,7 +10,7 @@ your own Supabase project. One recipe box per install.
 - Admin page for members, sections, site name and a JSON export
 - Public or sign-in-only reading
 - Keeps a copy in the browser, so recipes stay readable if the database is down
-- Installs into its own `cookbook` database schema, so it can share a Supabase
+- Installs into its own `plico` database schema, so it can share a Supabase
   project with other apps
 
 Built with TypeScript, React and Vite. There is no server to run.

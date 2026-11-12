@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { cachedSiteName, clearCache, ensureProfile, loadAll } from './lib/api'
 import { configured, supabase } from './lib/supabase'
-import type { CookbookData, Profile } from './lib/types'
+import type { RecipeBoxData, Profile } from './lib/types'
 import { go, useHash } from './lib/useHash'
 import { AccountBar } from './components/AccountBar'
 import { AccountPage, NewPasswordPage, ProfilePage } from './components/AccountPages'
@@ -13,7 +13,7 @@ import { RecipePage } from './components/RecipePage'
 
 export function App() {
   const hash = useHash()
-  const [data, setData] = useState<CookbookData | null>(null)
+  const [data, setData] = useState<RecipeBoxData | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
