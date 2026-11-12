@@ -55,3 +55,18 @@ reset role;
 \echo == bad data (expect check violations)
 insert into plico.recipes(id,title,section_id) values ('Bad Slug','x',1);
 insert into plico.recipes(id,title,section_id,steps) values ('ok','x',1,'{}');
+\echo == favorites
+set request.jwt.claim.sub='00000000-0000-0000-0000-000000000003'; set role authenticated;
+insert into plico.favorites(recipe_id) values ('weeknight-chili') returning user_id, recipe_id;
+\echo favorite for someone else (expect RLS violation)
+insert into plico.favorites(user_id, recipe_id) values ('00000000-0000-0000-0000-000000000001','weeknight-chili');
+\echo favorite a recipe that does not exist (expect foreign key violation)
+insert into plico.favorites(recipe_id) values ('no-such-recipe');
+reset role;
+\echo another user sees none of them, and cannot remove them (expect 0, then 1 left)
+set request.jwt.claim.sub='00000000-0000-0000-0000-000000000001'; set role authenticated;
+select count(*) from plico.favorites; delete from plico.favorites;
+reset role; select count(*) from plico.favorites;
+\echo signed out (expect permission denied)
+set request.jwt.claim.sub=''; set role anon; select count(*) from plico.favorites;
+reset role;

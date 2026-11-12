@@ -72,6 +72,8 @@ code { font-family: var(--font-mono); font-size: .9em; background: var(--herb-so
 .btn.ghost { background: var(--herb-soft); color: var(--herb); }
 .btn.danger { background: var(--chili-soft); color: var(--chili); }
 .btn.danger.solid { background: var(--chili); color: var(--bg); }
+.btn.fav.on { background: var(--chili-soft); color: var(--chili); }
+.card .star { color: var(--chili); }
 .r-time { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
 .r-edit { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .r-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; padding-top: 8px; }

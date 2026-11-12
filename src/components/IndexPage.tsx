@@ -1,23 +1,30 @@
-import type { RecipeBoxData, Recipe } from '../lib/types'
+import type { Recipe, RecipeBoxData } from '../lib/types'
 import { go } from '../lib/useHash'
+
+/** null = everything, a number = one section, 'favorites' = only favorites. */
+export type SectionFilter = number | 'favorites' | null
 
 interface Props {
   data: RecipeBoxData
   canEdit: boolean
   signedIn: boolean
   flash: string | null
+  favorites: Set<string>
   query: string
   setQuery: (q: string) => void
-  sectionFilter: number | null
-  setSectionFilter: (id: number | null) => void
+  sectionFilter: SectionFilter
+  setSectionFilter: (f: SectionFilter) => void
 }
 
 export function IndexPage(p: Props) {
   const { settings, sections, recipes, fromCache } = p.data
   const q = p.query.trim().toLowerCase()
+  const favorites = recipes.filter((r) => p.favorites.has(r.id))
+  // If the last favorite was just removed, fall back to showing everything.
+  const filter = p.sectionFilter === 'favorites' && favorites.length === 0 ? null : p.sectionFilter
 
   const matches = (r: Recipe) =>
-    (p.sectionFilter == null || r.section_id === p.sectionFilter) &&
+    (filter == null || (filter === 'favorites' ? p.favorites.has(r.id) : r.section_id === filter)) &&
     (!q ||
       [r.title, r.description ?? '', ...r.tags, ...r.ingredients.flatMap((g) => g.items.map((i) => i.item))]
         .join(' ')
@@ -28,7 +35,25 @@ export function IndexPage(p: Props) {
     .map((s) => ({ section: s, list: recipes.filter((r) => r.section_id === s.id && matches(r)) }))
     .filter((x) => x.list.length > 0)
 
+  // On the plain, unfiltered index, favorites also get a shelf of their own at the top.
+  const pinned = filter == null && !q ? favorites : []
   const locked = !settings.public_read && !p.signedIn && recipes.length === 0
+
+  const card = (r: Recipe) => (
+    <button key={r.id} className="card" onClick={() => go(r.id)}>
+      <h3>{r.title}</h3>
+      <p>{r.description}</p>
+      <div className="meta">
+        {p.favorites.has(r.id) && (
+          <span className="star" aria-label="Favorite">
+            ★
+          </span>
+        )}
+        {r.time && <span>{r.time}</span>}
+        {r.serves ? <span>Serves {r.serves}</span> : null}
+      </div>
+    </button>
+  )
 
   return (
     <>
@@ -75,14 +100,23 @@ export function IndexPage(p: Props) {
               onChange={(e) => p.setQuery(e.target.value)}
             />
             <div className="chips">
-              <button className="chip" aria-pressed={p.sectionFilter == null} onClick={() => p.setSectionFilter(null)}>
+              <button className="chip" aria-pressed={filter == null} onClick={() => p.setSectionFilter(null)}>
                 All
               </button>
+              {favorites.length > 0 && (
+                <button
+                  className="chip"
+                  aria-pressed={filter === 'favorites'}
+                  onClick={() => p.setSectionFilter('favorites')}
+                >
+                  ★ Favorites
+                </button>
+              )}
               {sections.map((s) => (
                 <button
                   key={s.id}
                   className="chip"
-                  aria-pressed={p.sectionFilter === s.id}
+                  aria-pressed={filter === s.id}
                   onClick={() => p.setSectionFilter(s.id)}
                 >
                   {s.name}
@@ -91,21 +125,17 @@ export function IndexPage(p: Props) {
             </div>
           </div>
 
+          {pinned.length > 0 && (
+            <div>
+              <div className="section-label">★ Favorites</div>
+              <div className="grid">{pinned.map(card)}</div>
+            </div>
+          )}
+
           {visible.map(({ section, list }) => (
             <div key={section.id}>
               <div className="section-label">{section.name}</div>
-              <div className="grid">
-                {list.map((r) => (
-                  <button key={r.id} className="card" onClick={() => go(r.id)}>
-                    <h3>{r.title}</h3>
-                    <p>{r.description}</p>
-                    <div className="meta">
-                      {r.time && <span>{r.time}</span>}
-                      {r.serves ? <span>Serves {r.serves}</span> : null}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <div className="grid">{list.map(card)}</div>
             </div>
           ))}
 

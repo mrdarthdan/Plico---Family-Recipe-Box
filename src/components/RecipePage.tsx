@@ -17,10 +17,12 @@ interface Props {
   recipe: Recipe
   sectionName: string
   canEdit: boolean
+  isFavorite: boolean
+  onToggleFavorite: () => void
   onDeleted: () => Promise<void>
 }
 
-export function RecipePage({ recipe: r, sectionName, canEdit, onDeleted }: Props) {
+export function RecipePage({ recipe: r, sectionName, canEdit, isFavorite, onToggleFavorite, onDeleted }: Props) {
   const [servings, setServingsState] = useState(remembered.servings[r.id] ?? r.serves ?? 1)
   const [checked, setChecked] = useState<Record<string, boolean>>(remembered.checked[r.id] ?? {})
   const [confirming, setConfirming] = useState(false)
@@ -81,6 +83,9 @@ export function RecipePage({ recipe: r, sectionName, canEdit, onDeleted }: Props
             Start cooking
           </button>
         )}
+        <button className={'btn ghost fav' + (isFavorite ? ' on' : '')} aria-pressed={isFavorite} onClick={onToggleFavorite}>
+          {isFavorite ? '★ Favorite' : '☆ Favorite'}
+        </button>
         {r.time && <span className="r-time">{r.time}</span>}
         {canEdit && (
           <span className="r-edit">

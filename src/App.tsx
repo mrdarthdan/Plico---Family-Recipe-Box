@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { cachedSiteName, clearCache, ensureProfile, loadAll } from './lib/api'
+import { loadFavorites, setFavorite } from './lib/favorites'
 import { configured, supabase } from './lib/supabase'
 import type { RecipeBoxData, Profile } from './lib/types'
 import { go, useHash } from './lib/useHash'
 import { AccountBar } from './components/AccountBar'
 import { AccountPage, NewPasswordPage, ProfilePage } from './components/AccountPages'
 import { AdminPage } from './components/AdminPage'
-import { IndexPage } from './components/IndexPage'
+import { IndexPage, type SectionFilter } from './components/IndexPage'
 import { RecipeForm } from './components/RecipeForm'
 import { RecipePage } from './components/RecipePage'
 
@@ -20,7 +21,8 @@ export function App() {
   const [recovery, setRecovery] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [sectionFilter, setSectionFilter] = useState<number | null>(null)
+  const [sectionFilter, setSectionFilter] = useState<SectionFilter>(null)
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const lastUserId = useRef<string | null | undefined>(undefined)
 
   const reload = useCallback(async () => {
@@ -70,6 +72,38 @@ export function App() {
   useEffect(() => {
     if (data) document.title = data.settings.site_name
   }, [data])
+
+  const userId = user?.id ?? null
+  useEffect(() => {
+    if (!configured) return
+    let stale = false
+    void loadFavorites(userId).then((f) => {
+      if (!stale) setFavorites(f)
+    })
+    return () => {
+      stale = true
+    }
+  }, [userId])
+
+  const toggleFavorite = useCallback(
+    async (id: string) => {
+      const on = !favorites.has(id)
+      const apply = (add: boolean) =>
+        setFavorites((prev) => {
+          const next = new Set(prev)
+          if (add) next.add(id)
+          else next.delete(id)
+          return next
+        })
+      apply(on) // show it straight away; undo if saving fails
+      try {
+        await setFavorite(userId, id, on)
+      } catch {
+        apply(!on)
+      }
+    },
+    [favorites, userId],
+  )
 
   useEffect(() => {
     if (hash) setFlash(null)
@@ -141,6 +175,8 @@ export function App() {
         recipe={recipe}
         sectionName={data.sections.find((s) => s.id === recipe.section_id)?.name ?? ''}
         canEdit={canEdit}
+        isFavorite={favorites.has(recipe.id)}
+        onToggleFavorite={() => void toggleFavorite(recipe.id)}
         onDeleted={async () => {
           await reload()
           setFlash(`Deleted “${recipe.title}”.`)
@@ -153,6 +189,7 @@ export function App() {
         canEdit={canEdit}
         signedIn={!!user}
         flash={flash}
+        favorites={favorites}
         query={query}
         setQuery={setQuery}
         sectionFilter={sectionFilter}

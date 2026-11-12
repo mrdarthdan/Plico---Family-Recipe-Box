@@ -5,6 +5,7 @@ your own Supabase project. One recipe box per install.
 
 - Recipes with grouped ingredients, timed steps, notes, tags, a credit line and a source link
 - Serving scaler, tick-off ingredients, step timers, full-screen cook mode
+- Personal favorites, pinned to the top of the index
 - Plain-text recipe editor: type ingredients and steps one per line
 - Viewer, editor and admin roles, enforced in the database
 - Admin page for members, drag-to-reorder sections, site name, and exports:

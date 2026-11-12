@@ -74,7 +74,7 @@ dashboard; removing the commit is not enough.
 
 ## 3. Data model
 
-Four tables, all in the `plico` schema.
+Five tables, all in the `plico` schema.
 
 **`settings`**: one row. `site_name`, `tagline`, and `public_read` (true =
 anyone can read recipes; false = signed-in accounts only).
@@ -85,6 +85,10 @@ A section cannot be deleted while recipes still use it.
 **`profiles`**: one row per account that has opened the app. `user_id`
 (points at Supabase's `auth.users`), `display_name`, `role`. Emails are not
 stored here; they stay in `auth.users`.
+
+**`favorites`**: one row per person per favorited recipe: `user_id`,
+`recipe_id`, `created_at`. Removed automatically if the recipe or the account
+is deleted. Signed-out visitors' favorites stay in their browser instead.
 
 **`recipes`**:
 
@@ -127,6 +131,7 @@ stored here; they stay in `auth.users`.
 |---|---|---|---|---|
 | Read site name and tagline | yes | yes | yes | yes |
 | Read recipes and sections | if `public_read` | yes | yes | yes |
+| Keep their own favorites | in their browser only | yes | yes | yes |
 | Add, edit, delete recipes | no | no | yes | yes |
 | Add, rename, delete sections | no | no | no | yes |
 | Change site settings | no | no | no | yes |
