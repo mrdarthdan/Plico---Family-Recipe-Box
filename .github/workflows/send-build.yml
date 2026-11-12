@@ -1,0 +1,35 @@
+name: Send build to upload URLs
+
+# For hosts that take files through pre-signed upload URLs. Give it a JSON
+# object mapping a file path on the build branch to the URL to PUT it to:
+#   {"assets/index-abc123.js": "https://host.example/upload/..."}
+
+on:
+  workflow_dispatch:
+    inputs:
+      uploads:
+        description: JSON object of build-branch file path to pre-signed PUT URL
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: build
+      - name: Upload files
+        env:
+          UPLOADS: ${{ inputs.uploads }}
+        run: |
+          echo "$UPLOADS" | jq -r 'to_entries[] | [.key, .value] | @tsv' |
+          while IFS=$'\t' read -r path url; do
+            echo "::add-mask::$url"
+            test -f "$path" || { echo "No such file on the build branch: $path"; exit 1; }
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -T "$path" "$url")
+            echo "$path -> HTTP $code"
+            case "$code" in 2*) ;; *) exit 1 ;; esac
+          done
