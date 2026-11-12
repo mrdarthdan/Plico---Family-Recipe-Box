@@ -190,6 +190,7 @@ export function App() {
         signedIn={!!user}
         flash={flash}
         favorites={favorites}
+        onToggleFavorite={(id) => void toggleFavorite(id)}
         query={query}
         setQuery={setQuery}
         sectionFilter={sectionFilter}

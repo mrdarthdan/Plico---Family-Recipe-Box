@@ -10,6 +10,7 @@ interface Props {
   signedIn: boolean
   flash: string | null
   favorites: Set<string>
+  onToggleFavorite: (id: string) => void
   query: string
   setQuery: (q: string) => void
   sectionFilter: SectionFilter
@@ -39,21 +40,32 @@ export function IndexPage(p: Props) {
   const pinned = filter == null && !q ? favorites : []
   const locked = !settings.public_read && !p.signedIn && recipes.length === 0
 
-  const card = (r: Recipe) => (
-    <button key={r.id} className="card" onClick={() => go(r.id)}>
-      <h3>{r.title}</h3>
-      <p>{r.description}</p>
-      <div className="meta">
-        {p.favorites.has(r.id) && (
-          <span className="star" aria-label="Favorite">
-            ★
-          </span>
-        )}
-        {r.time && <span>{r.time}</span>}
-        {r.serves ? <span>Serves {r.serves}</span> : null}
+  // A card is two buttons side by side in one box: the big one opens the
+  // recipe, the star in the corner toggles the favorite without opening it.
+  const card = (r: Recipe) => {
+    const on = p.favorites.has(r.id)
+    return (
+      <div key={r.id} className="card">
+        <button className="card-open" onClick={() => go(r.id)}>
+          <h3>{r.title}</h3>
+          <p>{r.description}</p>
+          <div className="meta">
+            {r.time && <span>{r.time}</span>}
+            {r.serves ? <span>Serves {r.serves}</span> : null}
+          </div>
+        </button>
+        <button
+          className={'card-fav' + (on ? ' on' : '')}
+          aria-pressed={on}
+          aria-label={on ? `Remove ${r.title} from favorites` : `Add ${r.title} to favorites`}
+          title={on ? 'Remove from favorites' : 'Add to favorites'}
+          onClick={() => p.onToggleFavorite(r.id)}
+        >
+          {on ? '★' : '☆'}
+        </button>
       </div>
-    </button>
-  )
+    )
+  }
 
   return (
     <>

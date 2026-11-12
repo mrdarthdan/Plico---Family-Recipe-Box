@@ -49,9 +49,13 @@ code { font-family: var(--font-mono); font-size: .9em; background: var(--herb-so
 .byline { font-size: 13px; font-style: italic; color: var(--muted); margin-top: 6px; }
 .section-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 24px 0 10px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-.card { text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; transition: border-color .15s, transform .15s; }
+.card { position: relative; display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; transition: border-color .15s, transform .15s; }
 .card:hover { border-color: var(--herb); transform: translateY(-1px); }
-.card h3 { font-size: 1.2rem; line-height: 1.2; }
+.card-open { flex: 1; text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 16px; background: none; border: 0; border-radius: 12px; min-width: 0; }
+.card h3 { font-size: 1.2rem; line-height: 1.2; padding-right: 30px; }
+.card-fav { position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: none; border-radius: 999px; font-size: 21px; line-height: 1; color: var(--muted); }
+.card-fav:hover { background: var(--herb-soft); color: var(--herb); }
+.card-fav.on { color: var(--chili); }
 .card p { margin: 0; color: var(--muted); font-size: 14px; }
 .meta { display: flex; gap: 12px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; color: var(--herb); margin-top: auto; }
 .empty { color: var(--muted); padding: 24px 0; }
@@ -73,7 +77,6 @@ code { font-family: var(--font-mono); font-size: .9em; background: var(--herb-so
 .btn.danger { background: var(--chili-soft); color: var(--chili); }
 .btn.danger.solid { background: var(--chili); color: var(--bg); }
 .btn.fav.on { background: var(--chili-soft); color: var(--chili); }
-.card .star { color: var(--chili); }
 .r-time { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
 .r-edit { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .r-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; padding-top: 8px; }
