@@ -7,7 +7,8 @@ your own Supabase project. One recipe box per install.
 - Serving scaler, tick-off ingredients, step timers, full-screen cook mode
 - Plain-text recipe editor: type ingredients and steps one per line
 - Viewer, editor and admin roles, enforced in the database
-- Admin page for members, sections, site name and a JSON export
+- Admin page for members, drag-to-reorder sections, site name, and exports:
+  a JSON backup, or a zip of printable PDFs (one book plus one PDF per recipe)
 - Public or sign-in-only reading
 - Keeps a copy in the browser, so recipes stay readable if the database is down
 - Installs into its own `plico` database schema, so it can share a Supabase

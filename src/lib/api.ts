@@ -104,9 +104,20 @@ export async function addSection(name: string, sort: number) {
   const { error } = await supabase.from('sections').insert({ name, sort })
   if (error) throw new Error(friendly(error.message))
 }
-export async function updateSection(id: number, name: string, sort: number) {
-  const { error } = await supabase.from('sections').update({ name, sort }).eq('id', id)
+export async function renameSection(id: number, name: string) {
+  const { error } = await supabase.from('sections').update({ name }).eq('id', id)
   if (error) throw new Error(friendly(error.message))
+}
+/** Saves a new order. `ids` lists every section id, first to last. */
+export async function reorderSections(ids: number[], current: Section[]) {
+  const changes = ids
+    .map((id, i) => ({ id, sort: (i + 1) * 10 }))
+    .filter((c) => current.find((s) => s.id === c.id)?.sort !== c.sort)
+  const results = await Promise.all(
+    changes.map((c) => supabase.from('sections').update({ sort: c.sort }).eq('id', c.id)),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw new Error(friendly(failed.error.message))
 }
 export async function deleteSection(id: number) {
   const { error } = await supabase.from('sections').delete().eq('id', id)

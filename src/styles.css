@@ -124,6 +124,14 @@ input, select, textarea { padding: 11px 13px; border: 1px solid var(--line); bor
 .table input.narrow { width: 76px; }
 .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .row-actions .btn { padding: 7px 12px; }
+.sec-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sec-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 6px 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.sec-row.dragging { border-color: var(--herb); background: var(--herb-soft); box-shadow: 0 6px 18px rgb(0 0 0 / .14); position: relative; z-index: 1; }
+.sec-row input { padding: 7px 9px; min-width: 0; width: 100%; }
+.sec-count { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.handle { border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; padding: 6px 4px; border-radius: 6px; cursor: grab; touch-action: none; user-select: none; }
+.sec-row.dragging .handle { cursor: grabbing; color: var(--herb); }
+@media (max-width: 560px) { .sec-row { grid-template-columns: auto minmax(0, 1fr); } .sec-count, .sec-row .row-actions { grid-column: 2; justify-content: flex-start; } }
 .inline-form { display: flex; gap: 10px; flex-wrap: wrap; }
 .inline-form input { flex: 1; min-width: 180px; }
 .stack { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }

@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type PointerEvent } from 'react'
 import {
-  addSection, deleteSection, listMembers, saveSettings, setRole, updateSection,
+  addSection, deleteSection, listMembers, renameSection, reorderSections, saveSettings, setRole,
 } from '../lib/api'
 import type { RecipeBoxData, Member, Role, Section } from '../lib/types'
 import { go } from '../lib/useHash'
@@ -137,27 +137,77 @@ function Sections({
   run: Run
 }) {
   const [name, setName] = useState('')
+  // The order shown on screen. It follows the saved order except mid-drag.
+  const [order, setOrder] = useState(sections)
+  const [dragging, setDragging] = useState<number | null>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+  const orderRef = useRef(order)
+  orderRef.current = order
+
+  useEffect(() => {
+    setOrder(sections)
+  }, [sections])
+
   const nextSort = sections.reduce((max, s) => Math.max(max, s.sort), 0) + 10
+
+  const save = (next: Section[]) => {
+    const ids = next.map((s) => s.id)
+    if (ids.join() === sections.map((s) => s.id).join()) return
+    void run(() => reorderSections(ids, sections)).then((ok) => {
+      if (!ok) setOrder(sections)
+    })
+  }
+
+  /** Moves the dragged row to wherever the pointer now is. */
+  const dragTo = (id: number, clientY: number) => {
+    const rows = Array.from(listRef.current?.children ?? [])
+    const cur = orderRef.current
+    const from = cur.findIndex((s) => s.id === id)
+    let to = from
+    rows.forEach((el, i) => {
+      const box = el.getBoundingClientRect()
+      const middle = box.top + box.height / 2
+      if (i < from && clientY < middle) to = Math.min(to, i)
+      if (i > from && clientY > middle) to = Math.max(to, i)
+    })
+    if (to !== from) setOrder(moved(cur, from, to))
+  }
+
+  /** Arrow keys on the handle move a section one place and save. */
+  const nudge = (id: number, by: number) => {
+    const from = order.findIndex((s) => s.id === id)
+    const to = from + by
+    if (to < 0 || to >= order.length) return
+    const next = moved(order, from, to)
+    setOrder(next)
+    save(next)
+  }
 
   return (
     <section className="admin-block">
       <h2>Sections</h2>
-      <p className="hint">Lower order numbers come first. A section can only be deleted when it is empty.</p>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Order</th>
-            <th>Recipes</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {sections.map((s) => (
-            <SectionRow key={s.id} section={s} count={recipes.filter((r) => r.section_id === s.id).length} run={run} />
-          ))}
-        </tbody>
-      </table>
+      <p className="hint">
+        Drag a section by its handle to change the order, or focus the handle and use the arrow keys. A section
+        can only be deleted when it is empty.
+      </p>
+      <ul className="sec-list" ref={listRef}>
+        {order.map((s) => (
+          <SectionRow
+            key={s.id}
+            section={s}
+            count={recipes.filter((r) => r.section_id === s.id).length}
+            dragging={dragging === s.id}
+            run={run}
+            onDragStart={() => setDragging(s.id)}
+            onDragMove={(y) => dragTo(s.id, y)}
+            onDragEnd={() => {
+              setDragging(null)
+              save(orderRef.current)
+            }}
+            onNudge={(by) => nudge(s.id, by)}
+          />
+        ))}
+      </ul>
       <form
         className="inline-form"
         onSubmit={(e: FormEvent) => {
@@ -178,39 +228,69 @@ function Sections({
   )
 }
 
+function moved<T>(list: T[], from: number, to: number): T[] {
+  const next = list.slice()
+  next.splice(to, 0, next.splice(from, 1)[0])
+  return next
+}
+
 function SectionRow({
-  section: s, count, run,
+  section: s, count, dragging, run, onDragStart, onDragMove, onDragEnd, onNudge,
 }: {
   section: Section
   count: number
+  dragging: boolean
   run: Run
+  onDragStart: () => void
+  onDragMove: (clientY: number) => void
+  onDragEnd: () => void
+  onNudge: (by: number) => void
 }) {
   const [name, setName] = useState(s.name)
-  const [sort, setSort] = useState(String(s.sort))
-  const dirty = name.trim() !== s.name || +sort !== s.sort
+  const dirty = name.trim() !== s.name
 
   return (
-    <tr>
-      <td>
-        <input aria-label="Section name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
-      </td>
-      <td>
-        <input aria-label="Order" className="narrow" type="number" value={sort} onChange={(e) => setSort(e.target.value)} />
-      </td>
-      <td>{count}</td>
-      <td className="row-actions">
+    <li className={'sec-row' + (dragging ? ' dragging' : '')}>
+      <button
+        type="button"
+        className="handle"
+        aria-label={`Reorder ${s.name}. Use the up and down arrow keys.`}
+        title="Drag to reorder"
+        onPointerDown={(e: PointerEvent<HTMLButtonElement>) => {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          onDragStart()
+        }}
+        onPointerMove={(e: PointerEvent<HTMLButtonElement>) => {
+          if (dragging) onDragMove(e.clientY)
+        }}
+        onPointerUp={() => dragging && onDragEnd()}
+        onPointerCancel={() => dragging && onDragEnd()}
+        onKeyDown={(e: KeyboardEvent<HTMLButtonElement>) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault()
+            onNudge(e.key === 'ArrowUp' ? -1 : 1)
+          }
+        }}
+      >
+        <span aria-hidden="true">⠿</span>
+      </button>
+      <input aria-label="Section name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
+      <span className="sec-count">
+        {count} recipe{count === 1 ? '' : 's'}
+      </span>
+      <span className="row-actions">
         <button
           className="btn ghost"
           disabled={!dirty || !name.trim()}
-          onClick={() => run(() => updateSection(s.id, name.trim(), Math.round(+sort) || 0))}
+          onClick={() => run(() => renameSection(s.id, name.trim()))}
         >
-          Save
+          Rename
         </button>
         <button className="btn danger" disabled={count > 0} onClick={() => run(() => deleteSection(s.id))}>
           Delete
         </button>
-      </td>
-    </tr>
+      </span>
+    </li>
   )
 }
 
@@ -258,27 +338,52 @@ function SiteSettings({ data, run }: { data: RecipeBoxData; run: Run }) {
 }
 
 function Export({ data }: { data: RecipeBoxData }) {
-  const download = () => {
+  const [progress, setProgress] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const stamp = new Date().toISOString().slice(0, 10)
+  const count = data.recipes.length
+
+  const downloadJson = () => {
     const payload = {
       exported_at: new Date().toISOString(),
       settings: data.settings,
       sections: data.sections,
       recipes: data.recipes,
     }
-    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'plico-export-' + payload.exported_at.slice(0, 10) + '.json'
-    a.click()
-    URL.revokeObjectURL(url)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    void import('../lib/exportPdf').then((m) => m.saveBlob(blob, `plico-export-${stamp}.json`))
   }
+
+  const downloadPdfs = async () => {
+    setError(null)
+    setProgress('Preparing…')
+    try {
+      // Loaded on demand: the PDF and zip code is large and rarely needed.
+      const { buildPdfZip, fileName, pageSizeForLocale, saveBlob } = await import('../lib/exportPdf')
+      const zip = await buildPdfZip(data, pageSizeForLocale(), (done, total) =>
+        setProgress(`Making PDFs: ${done} of ${total}`),
+      )
+      saveBlob(zip, `${fileName(data.settings.site_name)} - PDFs ${stamp}.zip`)
+    } catch (e) {
+      setError("Couldn't make the PDFs: " + (e as Error).message)
+    }
+    setProgress(null)
+  }
+
   return (
     <section className="admin-block">
       <h2>Export</h2>
-      <p className="hint">Downloads every recipe, section and setting as one JSON file. Keep it as a backup.</p>
+      <p className="hint">
+        The PDF download is a zip holding one printable book of every recipe, plus a separate PDF for each
+        recipe in a folder per section. The JSON file is a complete backup of recipes, sections and settings.
+      </p>
+      {error && <p className="msg err">{error}</p>}
       <div className="actions">
-        <button className="btn ghost" onClick={download}>
-          Download {data.recipes.length} recipes
+        <button className="btn" disabled={progress != null || count === 0} onClick={downloadPdfs}>
+          {progress ?? `Download ${count} recipes as PDFs (zip)`}
+        </button>
+        <button className="btn ghost" onClick={downloadJson}>
+          Download backup (JSON)
         </button>
       </div>
     </section>
